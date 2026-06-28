@@ -267,6 +267,16 @@ CREATE TRIGGER update_estoque_updated_at BEFORE UPDATE ON estoque FOR EACH ROW E
 CREATE TRIGGER update_clientes_updated_at BEFORE UPDATE ON clientes FOR EACH ROW EXECUTE FUNCTION update_updated_at();
 CREATE TRIGGER update_configuracoes_updated_at BEFORE UPDATE ON configuracoes FOR EACH ROW EXECUTE FUNCTION update_updated_at();
 
+-- Função security definer para evitar recursão no RLS
+CREATE OR REPLACE FUNCTION public.empresa_id()
+RETURNS UUID
+LANGUAGE SQL
+STABLE
+SECURITY DEFINER
+AS $$
+  SELECT empresa_id FROM public.usuarios WHERE id = auth.uid()
+$$;
+
 -- RLS Policies
 ALTER TABLE empresas ENABLE ROW LEVEL SECURITY;
 ALTER TABLE usuarios ENABLE ROW LEVEL SECURITY;
@@ -285,85 +295,62 @@ ALTER TABLE logs_auditoria ENABLE ROW LEVEL SECURITY;
 ALTER TABLE configuracoes ENABLE ROW LEVEL SECURITY;
 ALTER TABLE notificacoes ENABLE ROW LEVEL SECURITY;
 
--- Política: usuários veem apenas dados da sua empresa
+-- Políticas: usuários veem apenas dados da sua empresa
 CREATE POLICY empresa_isolation ON empresas
-  FOR ALL USING (id IN (
-    SELECT empresa_id FROM usuarios WHERE id = auth.uid()
-  ));
+  FOR ALL USING (id = public.empresa_id());
 
-CREATE POLICY usuario_empresa_isolation ON usuarios
-  FOR ALL USING (empresa_id IN (
-    SELECT empresa_id FROM usuarios WHERE id = auth.uid()
-  ));
+-- Usuário pode ver seu próprio registro e admins/gerentes veem todos da empresa
+CREATE POLICY usuario_self ON usuarios
+  FOR SELECT USING (id = auth.uid());
+CREATE POLICY usuario_empresa ON usuarios
+  FOR SELECT USING (empresa_id = public.empresa_id());
+CREATE POLICY usuario_insert ON usuarios
+  FOR INSERT WITH CHECK (empresa_id = public.empresa_id());
+CREATE POLICY usuario_update ON usuarios
+  FOR UPDATE USING (empresa_id = public.empresa_id());
+CREATE POLICY usuario_delete ON usuarios
+  FOR DELETE USING (empresa_id = public.empresa_id() AND id <> auth.uid());
 
 CREATE POLICY fornecedor_empresa_isolation ON fornecedores
-  FOR ALL USING (empresa_id IN (
-    SELECT empresa_id FROM usuarios WHERE id = auth.uid()
-  ));
+  FOR ALL USING (empresa_id = public.empresa_id());
 
 CREATE POLICY animal_empresa_isolation ON animais
-  FOR ALL USING (empresa_id IN (
-    SELECT empresa_id FROM usuarios WHERE id = auth.uid()
-  ));
+  FOR ALL USING (empresa_id = public.empresa_id());
 
 CREATE POLICY categoria_empresa_isolation ON categorias
-  FOR ALL USING (empresa_id IN (
-    SELECT empresa_id FROM usuarios WHERE id = auth.uid()
-  ));
+  FOR ALL USING (empresa_id = public.empresa_id());
 
 CREATE POLICY corte_empresa_isolation ON cortes
-  FOR ALL USING (empresa_id IN (
-    SELECT empresa_id FROM usuarios WHERE id = auth.uid()
-  ));
+  FOR ALL USING (empresa_id = public.empresa_id());
 
 CREATE POLICY estoque_empresa_isolation ON estoque
-  FOR ALL USING (empresa_id IN (
-    SELECT empresa_id FROM usuarios WHERE id = auth.uid()
-  ));
+  FOR ALL USING (empresa_id = public.empresa_id());
 
 CREATE POLICY mov_estoque_empresa_isolation ON movimentacoes_estoque
-  FOR ALL USING (empresa_id IN (
-    SELECT empresa_id FROM usuarios WHERE id = auth.uid()
-  ));
+  FOR ALL USING (empresa_id = public.empresa_id());
 
 CREATE POLICY cliente_empresa_isolation ON clientes
-  FOR ALL USING (empresa_id IN (
-    SELECT empresa_id FROM usuarios WHERE id = auth.uid()
-  ));
+  FOR ALL USING (empresa_id = public.empresa_id());
 
 CREATE POLICY venda_empresa_isolation ON vendas
-  FOR ALL USING (empresa_id IN (
-    SELECT empresa_id FROM usuarios WHERE id = auth.uid()
-  ));
+  FOR ALL USING (empresa_id = public.empresa_id());
 
 CREATE POLICY itens_venda_empresa_isolation ON itens_venda
   FOR ALL USING (venda_id IN (
-    SELECT id FROM vendas WHERE empresa_id IN (
-      SELECT empresa_id FROM usuarios WHERE id = auth.uid()
-    )
+    SELECT id FROM vendas WHERE empresa_id = public.empresa_id()
   ));
 
 CREATE POLICY despesa_empresa_isolation ON despesas
-  FOR ALL USING (empresa_id IN (
-    SELECT empresa_id FROM usuarios WHERE id = auth.uid()
-  ));
+  FOR ALL USING (empresa_id = public.empresa_id());
 
 CREATE POLICY receita_empresa_isolation ON receitas
-  FOR ALL USING (empresa_id IN (
-    SELECT empresa_id FROM usuarios WHERE id = auth.uid()
-  ));
+  FOR ALL USING (empresa_id = public.empresa_id());
 
 CREATE POLICY log_empresa_isolation ON logs_auditoria
-  FOR ALL USING (empresa_id IN (
-    SELECT empresa_id FROM usuarios WHERE id = auth.uid()
-  ));
+  FOR ALL USING (empresa_id = public.empresa_id());
 
 CREATE POLICY config_empresa_isolation ON configuracoes
-  FOR ALL USING (empresa_id IN (
-    SELECT empresa_id FROM usuarios WHERE id = auth.uid()
-  ));
+  FOR ALL USING (empresa_id = public.empresa_id());
 
 CREATE POLICY notificacao_empresa_isolation ON notificacoes
-  FOR ALL USING (empresa_id IN (
-    SELECT empresa_id FROM usuarios WHERE id = auth.uid()
-  ));
+  FOR ALL USING (empresa_id = public.empresa_id());
