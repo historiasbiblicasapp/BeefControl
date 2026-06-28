@@ -1,12 +1,9 @@
 -- BeefControl - Schema Inicial
 -- Sistema de Gestão para Açougues
 
--- Extensions
-CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
-
 -- Tabela de Empresas (Tenants)
 CREATE TABLE empresas (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   nome VARCHAR(255) NOT NULL,
   logo TEXT,
   cnpj VARCHAR(20),
@@ -35,7 +32,7 @@ CREATE TABLE usuarios (
 
 -- Tabela de Fornecedores
 CREATE TABLE fornecedores (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   empresa_id UUID NOT NULL REFERENCES empresas(id) ON DELETE CASCADE,
   nome VARCHAR(255) NOT NULL,
   telefone VARCHAR(20),
@@ -50,7 +47,7 @@ CREATE TABLE fornecedores (
 
 -- Tabela de Animais
 CREATE TABLE animais (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   empresa_id UUID NOT NULL REFERENCES empresas(id) ON DELETE CASCADE,
   fornecedor_id UUID NOT NULL REFERENCES fornecedores(id) ON DELETE RESTRICT,
   numero_lote VARCHAR(100) NOT NULL,
@@ -73,7 +70,7 @@ CREATE TABLE animais (
 
 -- Tabela de Categorias de Cortes
 CREATE TABLE categorias (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   empresa_id UUID NOT NULL REFERENCES empresas(id) ON DELETE CASCADE,
   nome VARCHAR(100) NOT NULL,
   descricao TEXT,
@@ -82,7 +79,7 @@ CREATE TABLE categorias (
 
 -- Tabela de Cortes (Desmanche)
 CREATE TABLE cortes (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   empresa_id UUID NOT NULL REFERENCES empresas(id) ON DELETE CASCADE,
   animal_id UUID NOT NULL REFERENCES animais(id) ON DELETE CASCADE,
   nome VARCHAR(100) NOT NULL,
@@ -98,7 +95,7 @@ CREATE TABLE cortes (
 
 -- Tabela de Estoque
 CREATE TABLE estoque (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   empresa_id UUID NOT NULL REFERENCES empresas(id) ON DELETE CASCADE,
   animal_id UUID NOT NULL REFERENCES animais(id) ON DELETE CASCADE,
   corte_id UUID NOT NULL REFERENCES cortes(id) ON DELETE CASCADE,
@@ -117,7 +114,7 @@ CREATE TABLE estoque (
 
 -- Tabela de Movimentações de Estoque
 CREATE TABLE movimentacoes_estoque (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   empresa_id UUID NOT NULL REFERENCES empresas(id) ON DELETE CASCADE,
   estoque_id UUID NOT NULL REFERENCES estoque(id) ON DELETE CASCADE,
   tipo VARCHAR(20) NOT NULL CHECK (tipo IN ('entrada', 'saida', 'ajuste', 'perda')),
@@ -130,7 +127,7 @@ CREATE TABLE movimentacoes_estoque (
 
 -- Tabela de Clientes
 CREATE TABLE clientes (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   empresa_id UUID NOT NULL REFERENCES empresas(id) ON DELETE CASCADE,
   nome VARCHAR(255) NOT NULL,
   telefone VARCHAR(20),
@@ -146,7 +143,7 @@ CREATE TABLE clientes (
 
 -- Tabela de Vendas
 CREATE TABLE vendas (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   empresa_id UUID NOT NULL REFERENCES empresas(id) ON DELETE CASCADE,
   cliente_id UUID REFERENCES clientes(id),
   tipo VARCHAR(20) NOT NULL CHECK (tipo IN ('peso', 'quantidade')),
@@ -160,7 +157,7 @@ CREATE TABLE vendas (
 
 -- Tabela de Itens de Venda
 CREATE TABLE itens_venda (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   venda_id UUID NOT NULL REFERENCES vendas(id) ON DELETE CASCADE,
   estoque_id UUID NOT NULL REFERENCES estoque(id) ON DELETE RESTRICT,
   corte_nome VARCHAR(100) NOT NULL,
@@ -172,7 +169,7 @@ CREATE TABLE itens_venda (
 
 -- Tabela de Despesas
 CREATE TABLE despesas (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   empresa_id UUID NOT NULL REFERENCES empresas(id) ON DELETE CASCADE,
   descricao VARCHAR(255) NOT NULL,
   valor DECIMAL(10,2) NOT NULL,
@@ -185,7 +182,7 @@ CREATE TABLE despesas (
 
 -- Tabela de Receitas
 CREATE TABLE receitas (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   empresa_id UUID NOT NULL REFERENCES empresas(id) ON DELETE CASCADE,
   descricao VARCHAR(255) NOT NULL,
   valor DECIMAL(10,2) NOT NULL,
@@ -199,7 +196,7 @@ CREATE TABLE receitas (
 
 -- Tabela de Logs de Auditoria
 CREATE TABLE logs_auditoria (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   empresa_id UUID NOT NULL REFERENCES empresas(id) ON DELETE CASCADE,
   usuario_id UUID NOT NULL REFERENCES usuarios(id),
   acao VARCHAR(100) NOT NULL,
@@ -213,7 +210,7 @@ CREATE TABLE logs_auditoria (
 
 -- Tabela de Configurações
 CREATE TABLE configuracoes (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   empresa_id UUID NOT NULL REFERENCES empresas(id) ON DELETE CASCADE,
   chave VARCHAR(100) NOT NULL,
   valor TEXT NOT NULL,
@@ -224,7 +221,7 @@ CREATE TABLE configuracoes (
 
 -- Tabela de Notificações
 CREATE TABLE notificacoes (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   empresa_id UUID NOT NULL REFERENCES empresas(id) ON DELETE CASCADE,
   titulo VARCHAR(255) NOT NULL,
   mensagem TEXT NOT NULL,
